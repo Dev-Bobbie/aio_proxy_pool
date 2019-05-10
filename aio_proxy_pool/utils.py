@@ -4,18 +4,15 @@
 import asyncio
 import aiohttp
 
-from aio_proxy_pool.config import HEADERS, REQUEST_TIMEOUT, REQUEST_DELAY
+import os
+import sys
 
-try:
-    import uvloop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-except ImportError:
-    pass
+base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,base_dir)
+from config import HEADERS, REQUEST_TIMEOUT, REQUEST_DELAY
+from config import loop
 
-loop = asyncio.get_event_loop()
-
-
-async def _get_page(url, sleep):
+async def _get_page(url, sleep,headers):
     """
     获取并返回网页内容
     """
@@ -23,24 +20,23 @@ async def _get_page(url, sleep):
         try:
             await asyncio.sleep(sleep)
             async with session.get(
-                url, headers=HEADERS, timeout=REQUEST_TIMEOUT
+                url, headers=headers, timeout=REQUEST_TIMEOUT
             ) as resp:
                 return await resp.text()
         except:
             return ""
 
 
-def fetch(url, sleep=REQUEST_DELAY):
+def fetch(url, sleep=REQUEST_DELAY,headers=HEADERS):
     """
     请求方法，用于获取网页内容
 
     :param url: 请求链接
     :param sleep: 延迟时间（秒）
     """
-
-    html = loop.run_until_complete(_get_page(url, sleep))
-    return html
-
+    html = loop.run_until_complete(_get_page(url, sleep,headers=headers))
+    if html:
+        return html
 
 
 from functools import wraps
@@ -54,3 +50,4 @@ def dec_connector(func):
         return await func(self, *args, **kwargs)
 
     return wrapper
+

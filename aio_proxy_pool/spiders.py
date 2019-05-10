@@ -5,10 +5,19 @@ import re
 
 import pyquery
 
-from aio_proxy_pool.utils import fetch
-from aio_proxy_pool.database import RedisClient
-from aio_proxy_pool.logger import logger
+import os
+import sys
 
+
+
+base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,base_dir)
+
+from utils import fetch
+from database import RedisClient
+from logger import logger
+from config import loop
+from config import HEADERS
 
 redis_conn = RedisClient()
 all_funcs = []
@@ -28,63 +37,40 @@ class Crawler:
         """
         启动收集器
         """
-        try:
-            import uvloop
-            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        except ImportError:
-            pass
-        loop = asyncio.get_event_loop()
-
         logger.info("Crawler working...")
+        tasks = []
         for func in all_funcs:
             for proxy in func():
-                loop.run_until_complete(redis_conn.add_proxy(proxy))
-                logger.info("Crawler √ {}".format(proxy))
+                if proxy:
+                    tasks.append(asyncio.ensure_future(redis_conn.add_proxy(proxy)))
+                    logger.info("Crawler √ {}".format(proxy))
+
+        loop.run_until_complete(asyncio.wait(tasks))
         logger.info("Crawler resting...")
 
-    # @staticmethod
-    # @collect_funcs
-    # def crawl_66ip():
-    #     """
-    #     66ip 代理：http://www.66ip.cn
-    #     """
-    #     url = (
-    #         "http://www.66ip.cn/nmtq.php?getnum=100&isp=0"
-    #         "&anonymoustype=0&area=0&proxytype={}&api=66ip"
-    #     )
-    #     pattern = "\d+\.\d+.\d+\.\d+:\d+"
-    #
-    #     items = [(0, "http://{}"), (1, "https://{}")]
-    #     for item in items:
-    #         proxy_type, host = item
-    #         html = fetch(url.format(proxy_type))
-    #         if html:
-    #             for proxy in re.findall(pattern, html):
-    #                 yield host.format(proxy)
 
-    # @staticmethod
-    # @collect_funcs
-    # def crawl_xici():
-    #     """
-    #     西刺代理：http://www.xicidaili.com
-    #     """
-    #     url = "http://www.xicidaili.com/{}"
-    #
-    #     items = []
-    #     for page in range(1, 21):
-    #         items.append(("wt/{}".format(page), "http://{}:{}"))
-    #         items.append(("wn/{}".format(page), "https://{}:{}"))
-    #
-    #     for item in items:
-    #         proxy_type, host = item
-    #         html = fetch(url.format(proxy_type))
-    #         if html:
-    #             doc = pyquery.PyQuery(html)
-    #             for proxy in doc("table tr").items():
-    #                 ip = proxy("td:nth-child(2)").text()
-    #                 port = proxy("td:nth-child(3)").text()
-    #                 if ip and port:
-    #                     yield host.format(ip, port)
+
+    @staticmethod
+    @collect_funcs
+    def crawl_quanwangdaili():
+        """
+        全网代理：http://www.goubanjia.com/
+        """
+        url = "http://www.goubanjia.com/"
+        html = fetch(url)
+
+        if html:
+            doc = pyquery.PyQuery(html)
+            proxy_ips = doc(".table-hover td.ip").items()
+            proxy_schemes = doc('td:nth-child(3)').items()
+            for proxy_ip, proxy_scheme in zip(proxy_ips, proxy_schemes):
+                scheme = proxy_scheme('a.href').text()
+                port = proxy_ip(".port").attr("class")
+                # 位运算向右移动3 也就是十进制除以8
+                port_number = int("".join([str("ABCDEFGHIZ".index(_)) for _ in port.split()[1]])) >> 3
+                proxy_ip.find('.port').remove()
+                proxy_ip.find('[style*="none;"]').remove()
+                yield (scheme + "://" + "".join(proxy_ip.text().replace(" ", "").split("\n")) + str(port_number))
 
     @staticmethod
     @collect_funcs
@@ -92,118 +78,140 @@ class Crawler:
         """
         快代理：https://www.kuaidaili.com
         """
-        url = "http://www.goubanjia.com/"
+        url = "https://www.kuaidaili.com/free/{}"
+        items = ["inha/{}/".format(_) for _ in range(1,21)]
+        for proxy_type in items:
+            html = fetch(url.format(proxy_type))
+            if html:
+                doc = pyquery.PyQuery(html)
+                for proxy in doc(".table-bordered tr").items():
+                    ip = proxy("[data-title=IP]").text()
+                    port = proxy("[data-title=PORT]").text()
+                    if ip and port:
+                        yield "http://{}:{}".format(ip, port)
+
+    @staticmethod
+    @collect_funcs
+    def crawl_ip3366():
+        """
+        云代理：http://www.ip3366.net
+        """
+        url = "http://www.ip3366.net/free/?stype=1&page={}"
+
+        items = [p for p in range(1, 8)]
+        for page in items:
+            html = fetch(url.format(page))
+            if html:
+                doc = pyquery.PyQuery(html)
+                for proxy in doc(".table-bordered tr").items():
+                    ip = proxy("td:nth-child(1)").text()
+                    port = proxy("td:nth-child(2)").text()
+                    schema = proxy("td:nth-child(4)").text()
+                    if ip and port and schema:
+                        yield "{}://{}:{}".format(schema.lower(), ip, port)
+    #
+    @staticmethod
+    @collect_funcs
+    def crawl_data5u():
+        """
+        无忧代理：http://www.data5u.com/
+        """
+        url = "http://www.data5u.com/"
 
         html = fetch(url)
         if html:
             doc = pyquery.PyQuery(html)
-            table = doc(".table-hover td.ip")
-            for i in table:
-                t = pyquery.PyQuery(i)
-                port = t(".port").attr("class")
-                raw_content = port.split()[1]
-                # 位运算向右移动3 也就是十进制除以8
-                port_number = int("".join([str("ABCDEFGHIZ".index(i)) for i in raw_content])) >> 3
-                t.find('.port').remove()
-                t.find('[style*="none;"]').remove()
-                yield 'http://' + ("".join(t.text().replace(" ", "").split("\n")) + str(port_number))
+            for index, item in enumerate(doc("li ul").items()):
+                if index > 0:
+                    ip = item("span:nth-child(1)").text()
+                    port = item("span:nth-child(2)").text()
+                    schema = item("span:nth-child(4)").text()
+                    if ip and port and schema:
+                        yield "{}://{}:{}".format(schema, ip, port)
+    #
+    @staticmethod
+    @collect_funcs
+    def crawl_iphai():
+        """
+        ip 海代理：http://www.iphai.com
+        """
+        url = "http://www.iphai.com/free/{}"
 
+        items = ["ng"]
+        for proxy_type in items:
+            html = fetch(url.format(proxy_type))
+            if html:
+                doc = pyquery.PyQuery(html)
+                for item in doc(".table-bordered tr").items():
+                    ip = item("td:nth-child(1)").text()
+                    port = item("td:nth-child(2)").text()
+                    schema = item("td:nth-child(4)").text()
+                    if not schema:
+                        schema = "HTTP"
+                    if ip and port and schema:
+                        yield "{}://{}:{}".format(schema.lower(), ip, port)
 
-# @staticmethod
-    # @collect_funcs
-    # def crawl_kuaidaili():
-    #     """
-    #     快代理：https://www.kuaidaili.com
-    #     """
-    #     url = "https://www.kuaidaili.com/free/{}"
-    #
-    #     items = ["inha/1/"]
-    #     for proxy_type in items:
-    #         html = fetch(url.format(proxy_type))
-    #         if html:
-    #             doc = pyquery.PyQuery(html)
-    #             for proxy in doc(".table-bordered tr").items():
-    #                 ip = proxy("[data-title=IP]").text()
-    #                 port = proxy("[data-title=PORT]").text()
-    #                 if ip and port:
-    #                     yield "http://{}:{}".format(ip, port)
-    #
-    # @staticmethod
-    # @collect_funcs
-    # def crawl_ip3366():
-    #     """
-    #     云代理：http://www.ip3366.net
-    #     """
-    #     url = "http://www.ip3366.net/?stype=1&page={}"
-    #
-    #     items = [p for p in range(1, 8)]
-    #     for page in items:
-    #         html = fetch(url.format(page))
-    #         if html:
-    #             doc = pyquery.PyQuery(html)
-    #             for proxy in doc(".table-bordered tr").items():
-    #                 ip = proxy("td:nth-child(1)").text()
-    #                 port = proxy("td:nth-child(2)").text()
-    #                 schema = proxy("td:nth-child(4)").text()
-    #                 if ip and port and schema:
-    #                     yield "{}://{}:{}".format(schema.lower(), ip, port)
-    #
-    # @staticmethod
-    # @collect_funcs
-    # def crawl_data5u():
-    #     """
-    #     无忧代理：http://www.data5u.com/
-    #     """
-    #     url = "http://www.data5u.com/"
-    #
-    #     html = fetch(url)
-    #     if html:
-    #         doc = pyquery.PyQuery(html)
-    #         for index, item in enumerate(doc("li ul").items()):
-    #             if index > 0:
-    #                 ip = item("span:nth-child(1)").text()
-    #                 port = item("span:nth-child(2)").text()
-    #                 schema = item("span:nth-child(4)").text()
-    #                 if ip and port and schema:
-    #                     yield "{}://{}:{}".format(schema, ip, port)
-    #
-    # @staticmethod
-    # @collect_funcs
-    # def crawl_iphai():
-    #     """
-    #     ip 海代理：http://www.iphai.com
-    #     """
-    #     url = "http://www.iphai.com/free/{}"
-    #
-    #     items = ["ng", "np", "wg", "wp"]
-    #     for proxy_type in items:
-    #         html = fetch(url.format(proxy_type))
-    #         if html:
-    #             doc = pyquery.PyQuery(html)
-    #             for item in doc(".table-bordered tr").items():
-    #                 ip = item("td:nth-child(1)").text()
-    #                 port = item("td:nth-child(2)").text()
-    #                 schema = item("td:nth-child(4)").text().split(",")[0]
-    #                 if ip and port and schema:
-    #                     yield "{}://{}:{}".format(schema.lower(), ip, port)
-    #
-    # @staticmethod
-    # @collect_funcs
-    # def crawl_swei360():
-    #     """
-    #     360 代理：http://www.swei360.com
-    #     """
-    #     url = "http://www.swei360.com/free/?stype={}"
-    #
-    #     items = [p for p in range(1, 5)]
-    #     for proxy_type in items:
-    #         html = fetch(url.format(proxy_type))
-    #         if html:
-    #             doc = pyquery.PyQuery(html)
-    #             for item in doc(".table-bordered tr").items():
-    #                 ip = item("td:nth-child(1)").text()
-    #                 port = item("td:nth-child(2)").text()
-    #                 schema = item("td:nth-child(4)").text()
-    #                 if ip and port and schema:
-    #                     yield "{}://{}:{}".format(schema.lower(), ip, port)
+    @staticmethod
+    @collect_funcs
+    def crawl_ip89():
+        """
+        89免费代理：http://http://www.89ip.cn
+        """
+        url = "http://www.89ip.cn/index_{}.html"
 
+        items = [p for p in range(1, 8)]
+        for proxy_type in items:
+            html = fetch(url.format(proxy_type))
+            if html:
+                doc = pyquery.PyQuery(html)
+                for item in doc(".layui-col-md8 tr").items():
+                    ip = item("td:nth-child(1)").text()
+                    port = item("td:nth-child(2)").text()
+                    if ip and port:
+                        yield "http://{}:{}".format(ip, port)
+                        yield "https://{}:{}".format(ip, port)
+
+    @staticmethod
+    @collect_funcs
+    def crawl_66ip():
+        """
+        66ip 代理：http://www.66ip.cn
+        """
+        from copy import deepcopy
+        headers = deepcopy(HEADERS)
+        headers.update({"Cookie":"__jsluid=9cce68bd84072a17f872d5692d26f33e; Hm_lvt_1761fabf3c988e7f04bec51acd4073f4=1557407541,1557459343; Hm_lpvt_1761fabf3c988e7f04bec51acd4073f4=1557468320; __jsl_clearance=1557490953.412|0|ptNHwPxImIv32%2BC73qvxVptSO1c%3D"})
+        url = 'http://www.66ip.cn/nmtq.php?getnum=100&isp=0&anonymoustype=0&start=&ports=&export=&ipaddress=&area=1&proxytype={}&api=66ip'
+        pattern = "\d+\.\d+.\d+\.\d+:\d+"
+        items = [(0, "http://{}"), (1, "https://{}")]
+        for item in items:
+            proxy_type, host = item
+            html = fetch(url.format(proxy_type),headers=headers)
+            if html:
+                for proxy in re.findall(pattern, html):
+                    yield host.format(proxy)
+
+    @staticmethod
+    @collect_funcs
+    def crawl_xici():
+        """
+        西刺代理：http://www.xicidaili.com
+        """
+        url = "http://www.xicidaili.com/{}"
+
+        items = []
+        for page in range(1, 21):
+            items.append(("wt/{}".format(page), "http://{}:{}"))
+            items.append(("wn/{}".format(page), "https://{}:{}"))
+
+        for item in items:
+            proxy_type, host = item
+            html = fetch(url.format(proxy_type))
+            if html:
+                doc = pyquery.PyQuery(html)
+                for proxy in doc("table tr").items():
+                    ip = proxy("td:nth-child(2)").text()
+                    port = proxy("td:nth-child(3)").text()
+                    if ip and port:
+                        yield host.format(ip, port)
+
+# Crawler.run()

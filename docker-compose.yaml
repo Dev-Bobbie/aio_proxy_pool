@@ -1,0 +1,30 @@
+version: '3.1'
+services:
+  app:
+    build: .
+    image: aio_proxy_pool:v01
+    container_name: aio_proxy_pool
+    networks:
+      - localhost
+    ports:
+     - "8001:8001"
+    working_dir: /code
+    volumes:
+      - ./aio_proxy_pool:/code/aio_proxy_pool
+      - ./run.py:/code/run.py
+    depends_on:
+      - redis
+    entrypoint: python run.py
+
+  redis:
+    image: redis
+    container_name: redis
+    networks:
+      - localhost
+    ports:
+      - 6399:6379
+    volumes:
+      - ./data/redis:/data
+networks:
+  localhost:
+

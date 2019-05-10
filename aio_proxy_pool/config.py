@@ -1,21 +1,23 @@
 #!/usr/bin/env python
 # coding=utf-8
-
+import asyncio
 # 请求超时时间（秒）
+import os
+
 REQUEST_TIMEOUT = 15
 # 请求延迟时间（秒）
-REQUEST_DELAY = 0
+REQUEST_DELAY =  0
 
 # redis 地址
-REDIS_HOST = "192.168.33.11"
+REDIS_HOST = "redis"
 # redis 端口
 REDIS_PORT = 6379
 # redis 密码
 REDIS_PASSWORD = None
 # redis set key
-REDIS_KEY = "proxies:ranking"
+REDIS_KEY = "async_pool:proxies"
 # redis 连接池最大连接量
-REDIS_MAX_CONNECTION = 10
+REDIS_MAX_CONNECTION =  10
 REDIS_MIN_CONNECTION = 5
 DB = 0
 
@@ -26,12 +28,6 @@ MIN_SCORE = 0
 # REDIS SCORE 初始分数
 INIT_SCORE = 9
 
-# server web host
-SERVER_HOST = "localhost"
-# server web port
-SERVER_PORT = 3289
-# 是否开启日志记录
-SERVER_ACCESS_LOG = True
 
 # 批量测试数量
 VALIDATOR_BATCH_COUNT = 256
@@ -44,8 +40,20 @@ VALIDATOR_RUN_CYCLE = 15
 # 爬取器循环周期（分钟）
 CRAWLER_RUN_CYCLE = 30
 # 请求 headers
-HEADERS = {
-    "X-Requested-With": "XMLHttpRequest",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
+HEADERS ={
+    "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+    "Accept-Encoding":"gzip, deflate",
+    "Accept-Language":"zh-CN,zh;q=0.9",
+    "Cache-Control":"max-age=0",
+    "Connection":"keep-alive",
+    "Upgrade-Insecure-Requests":"1",
+    "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
 }
+
+try:
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+except ImportError:
+    pass
+
+loop = asyncio.get_event_loop()

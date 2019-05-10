@@ -32,3 +32,5 @@ def run_schedule():
         except KeyboardInterrupt:
             logger.info("You have canceled all jobs")
             return
+
+run_schedule()

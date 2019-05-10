@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-
 import os
 import logging
 import logging.config as log_conf
@@ -13,7 +12,7 @@ if not os.path.exists(log_dir):
     os.mkdir(log_dir)
 today = datetime.datetime.now().strftime("%Y%m%d")
 
-log_path = os.path.join(log_dir, f'async_proxy_pool_{today}.log')
+log_path = os.path.join(log_dir, f'{today}.log')
 
 log_config = {
     'version': 1.0,
@@ -53,7 +52,6 @@ log_config = {
         }
     }
 }
-
 
 log_conf.dictConfig(log_config)
 logger = logging.getLogger('aio_proxy_pool')

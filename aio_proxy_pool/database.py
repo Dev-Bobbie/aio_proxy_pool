@@ -3,11 +3,15 @@
 
 import random
 
-import redis
 import aioredis
-from aio_proxy_pool.utils import dec_connector
+import os
+import sys
 
-from aio_proxy_pool.config import (
+base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,base_dir)
+from utils import dec_connector
+
+from config import (
     REDIS_KEY,
     REDIS_PORT,
     REDIS_PASSWORD,
@@ -46,7 +50,7 @@ class RedisClient:
         :param score: 初始化分数
         """
         if not await self.redis.zscore(REDIS_KEY, proxy):
-            await self.redis.zadd(REDIS_KEY,score,proxy)
+            await self.redis.zadd(REDIS_KEY,int(score),proxy)
 
     @dec_connector
     async def reduce_proxy_score(self, proxy):
@@ -102,9 +106,8 @@ class RedisClient:
 
         :param count: 代理数量
         """
-        proxies = await self.redis.zrevrange(REDIS_KEY, 0, count - 1)
-        for proxy in proxies:
-            yield proxy.decode("utf-8")
+        proxies = await self.redis.zrevrange(REDIS_KEY, 0, int(count) - 1)
+        return [proxy.decode("utf-8") for proxy in proxies]
 
     @dec_connector
     async def count_all_proxies(self):
@@ -120,8 +123,8 @@ class RedisClient:
 
         :param score: 代理分数
         """
-        if 0 <= score <= 10:
-            proxies = await self.redis.zrangebyscore(REDIS_KEY, score, score)
+        if 0 <= int(score) <= 10:
+            proxies = await self.redis.zrangebyscore(REDIS_KEY, int(score), int(score))
             return len(proxies)
         return -1
 
@@ -130,12 +133,13 @@ class RedisClient:
         """
         删除分数小于等于 score 的代理
         """
-        if 0 <= score <= 10:
-            proxies = self.redis.zrangebyscore(REDIS_KEY, 0, score)
+        if 0 <= int(score) <= 10:
+            proxies = await self.redis.zrangebyscore(REDIS_KEY, 0, int(score))
             for proxy in proxies:
                 await self.redis.zrem(REDIS_KEY, proxy)
             return True
         return False
+
 
     @dec_connector
     async def all_proxies(self):

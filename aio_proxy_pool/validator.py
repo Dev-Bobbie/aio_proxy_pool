@@ -5,18 +5,23 @@ import os
 import asyncio
 import aiohttp
 
-from aio_proxy_pool.config import VALIDATOR_BASE_URL, VALIDATOR_BATCH_COUNT, REQUEST_TIMEOUT
-from aio_proxy_pool.logger import logger
-from aio_proxy_pool.database import RedisClient
+import os
+import sys
 
+base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,base_dir)
+
+from config import VALIDATOR_BASE_URL, VALIDATOR_BATCH_COUNT, REQUEST_TIMEOUT
+from logger import logger
+from database import RedisClient
+from config import loop
 
 VALIDATOR_BASE_URL = os.environ.get("VALIDATOR_BASE_URL") or VALIDATOR_BASE_URL
 
 
 class Validator:
-    def __init__(self,loop):
+    def __init__(self):
         self.redis = RedisClient()
-        self.loop =loop
 
     async def test_proxy(self, proxy):
         """
@@ -59,7 +64,8 @@ class Validator:
 
     @staticmethod
     def run():
-        loop = asyncio.get_event_loop()
-        validator = Validator(loop).main()
+        validator = Validator().main()
         loop.run_until_complete(validator)
 
+
+# Validator.run()
