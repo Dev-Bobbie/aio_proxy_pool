@@ -2,7 +2,7 @@
 # coding=utf-8
 
 from sanic import Sanic
-from sanic.response import json
+from sanic.response import json,html
 import os
 import sys
 
@@ -17,7 +17,7 @@ redis_conn = RedisClient()
 
 @app.route("/")
 async def index(request):
-    return json({"Welcome": "This is a proxy pool system."})
+    return html('<h2>Welcome to Proxy Pool System</h2>')
 
 
 @app.route("/pop")
@@ -59,3 +59,6 @@ async def clear_proxies(request, score):
     if await redis_conn.clear_proxies(score):
         return json({"Clear": "Successful"})
     return json({"Clear": "Score should >= 0 and <= 10"})
+
+
+app.run(host='0.0.0.0')
