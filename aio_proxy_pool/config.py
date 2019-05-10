@@ -9,7 +9,7 @@ REQUEST_TIMEOUT = 15
 REQUEST_DELAY =  0
 
 # redis 地址
-REDIS_HOST = "192.168.33.11"
+REDIS_HOST = "redis"
 # redis 端口
 REDIS_PORT = 6379
 # redis 密码
