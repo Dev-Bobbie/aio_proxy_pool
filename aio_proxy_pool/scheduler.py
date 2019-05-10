@@ -3,12 +3,17 @@
 
 import time
 import schedule
+import os
+import sys
 
-from aio_proxy_pool.config import CRAWLER_RUN_CYCLE, VALIDATOR_RUN_CYCLE
+base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,base_dir)
 
-from aio_proxy_pool.spiders import Crawler
-from aio_proxy_pool.validator import Validator
-from aio_proxy_pool.logger import logger
+from config import CRAWLER_RUN_CYCLE, VALIDATOR_RUN_CYCLE
+
+from spiders import Crawler
+from validator import Validator
+from logger import logger
 
 
 def run_schedule():
