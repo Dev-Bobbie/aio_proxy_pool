@@ -8,7 +8,7 @@ import os
 import sys
 
 base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0,base_dir)
+sys.path.insert(0, base_dir)
 from utils import dec_connector
 
 from config import (
@@ -33,7 +33,7 @@ class RedisClient:
     _db = {}
     redis = None
 
-    def __init__(self, host=REDIS_HOST,db=DB, port=REDIS_PORT, password=REDIS_PASSWORD):
+    def __init__(self, host=REDIS_HOST, db=DB, port=REDIS_PORT, password=REDIS_PASSWORD):
         self.host = host
         self.port = port
         self.db = db
@@ -50,7 +50,7 @@ class RedisClient:
         :param score: 初始化分数
         """
         if not await self.redis.zscore(REDIS_KEY, proxy):
-            await self.redis.zadd(REDIS_KEY,int(score),proxy)
+            await self.redis.zadd(REDIS_KEY, int(score), proxy)
 
     @dec_connector
     async def reduce_proxy_score(self, proxy):
@@ -61,7 +61,7 @@ class RedisClient:
         """
         score = await self.redis.zscore(REDIS_KEY, proxy)
         if score and score > MIN_SCORE:
-            await self.redis.zincrby(REDIS_KEY,-1,proxy)
+            await self.redis.zincrby(REDIS_KEY, -1, proxy)
         else:
             await self.redis.zrem(REDIS_KEY, proxy)
 
@@ -74,7 +74,7 @@ class RedisClient:
         """
         score = await self.redis.zscore(REDIS_KEY, proxy)
         if score and score < MAX_SCORE:
-            await self.redis.zincrby(REDIS_KEY,1,proxy)
+            await self.redis.zincrby(REDIS_KEY, 1, proxy)
 
     @dec_connector
     async def pop_proxy(self):
@@ -140,7 +140,6 @@ class RedisClient:
             return True
         return False
 
-
     @dec_connector
     async def all_proxies(self):
         """
@@ -148,10 +147,9 @@ class RedisClient:
         """
         return await self.redis.zrangebyscore(REDIS_KEY, MIN_SCORE, MAX_SCORE)
 
-
     async def _db_client(self, db=None):
         client = await aioredis.create_redis_pool(
-            'redis://{host}:{port}/{db}'.format(host=self.host, port=self.port,db=db),
+            'redis://{host}:{port}/{db}'.format(host=self.host, port=self.port, db=db),
             password=self.password,
             minsize=REDIS_MIN_CONNECTION,
             maxsize=REDIS_MAX_CONNECTION)
@@ -163,4 +161,3 @@ class RedisClient:
         if db not in self._db:
             self._db[db] = self.redis = await self._db_client(db)
         return self._db[db]
-

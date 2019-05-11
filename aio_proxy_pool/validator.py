@@ -9,7 +9,7 @@ import os
 import sys
 
 base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0,base_dir)
+sys.path.insert(0, base_dir)
 
 from config import VALIDATOR_BASE_URL, VALIDATOR_BATCH_COUNT, REQUEST_TIMEOUT
 from logger import logger
@@ -34,7 +34,7 @@ class Validator:
                 if isinstance(proxy, bytes):
                     proxy = proxy.decode("utf8")
                 async with session.get(
-                    VALIDATOR_BASE_URL, proxy=proxy, timeout=REQUEST_TIMEOUT
+                        VALIDATOR_BASE_URL, proxy=proxy, timeout=REQUEST_TIMEOUT
                 ) as resp:
                     if resp.status == 200:
                         await self.redis.increase_proxy_score(proxy)
@@ -55,7 +55,7 @@ class Validator:
 
         proxies = await self.redis.all_proxies()
         for i in range(0, len(proxies), VALIDATOR_BATCH_COUNT):
-            _proxies = proxies[i : i + VALIDATOR_BATCH_COUNT]
+            _proxies = proxies[i: i + VALIDATOR_BATCH_COUNT]
             for proxy in _proxies:
                 if proxy:
                     await asyncio.ensure_future(self.test_proxy(proxy))
@@ -66,6 +66,5 @@ class Validator:
     def run():
         validator = Validator().main()
         loop.run_until_complete(validator)
-
 
 # Validator.run()

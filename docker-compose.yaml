@@ -7,13 +7,14 @@ services:
     networks:
       - localhost
     ports:
-     - "8001:8001"
+      - "8001:8001"
     working_dir: /code
     volumes:
       - ./aio_proxy_pool:/code/aio_proxy_pool
       - ./run.py:/code/run.py
     depends_on:
       - redis
+      - chrome
     entrypoint: python run.py
 
   redis:
@@ -25,6 +26,13 @@ services:
       - 6399:6379
     volumes:
       - ./data/redis:/data
+
+  chrome:
+    image: selenium/standalone-chrome:3.12.0-cobalt
+    ports:
+      - "4444:4444"
+    shm_size: 2g
+
 networks:
   localhost:
 

@@ -2,12 +2,12 @@
 # coding=utf-8
 
 from sanic import Sanic
-from sanic.response import json,html
+from sanic.response import json, html
 import os
 import sys
 
 base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0,base_dir)
+sys.path.insert(0, base_dir)
 
 from database import RedisClient
 

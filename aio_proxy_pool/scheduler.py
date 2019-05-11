@@ -7,7 +7,7 @@ import os
 import sys
 
 base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0,base_dir)
+sys.path.insert(0, base_dir)
 
 from config import CRAWLER_RUN_CYCLE, VALIDATOR_RUN_CYCLE
 
@@ -32,5 +32,6 @@ def run_schedule():
         except KeyboardInterrupt:
             logger.info("You have canceled all jobs")
             return
+
 
 run_schedule()

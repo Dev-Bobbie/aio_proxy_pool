@@ -8,11 +8,12 @@ import os
 import sys
 
 base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0,base_dir)
+sys.path.insert(0, base_dir)
 from config import HEADERS, REQUEST_TIMEOUT, REQUEST_DELAY
 from config import loop
 
-async def _get_page(url, sleep,headers):
+
+async def _get_page(url, sleep, headers):
     """
     获取并返回网页内容
     """
@@ -20,26 +21,27 @@ async def _get_page(url, sleep,headers):
         try:
             await asyncio.sleep(sleep)
             async with session.get(
-                url, headers=headers, timeout=REQUEST_TIMEOUT
+                    url, headers=headers, timeout=REQUEST_TIMEOUT
             ) as resp:
                 return await resp.text()
         except:
             return ""
 
 
-def fetch(url, sleep=REQUEST_DELAY,headers=HEADERS):
+def fetch(url, sleep=REQUEST_DELAY, headers=HEADERS):
     """
     请求方法，用于获取网页内容
 
     :param url: 请求链接
     :param sleep: 延迟时间（秒）
     """
-    html = loop.run_until_complete(_get_page(url, sleep,headers=headers))
+    html = loop.run_until_complete(_get_page(url, sleep, headers=headers))
     if html:
         return html
 
 
 from functools import wraps
+
 
 def dec_connector(func):
     @wraps(func)
@@ -50,4 +52,3 @@ def dec_connector(func):
         return await func(self, *args, **kwargs)
 
     return wrapper
-

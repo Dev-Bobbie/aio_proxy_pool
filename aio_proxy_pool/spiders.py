@@ -8,10 +8,8 @@ import pyquery
 import os
 import sys
 
-
-
 base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0,base_dir)
+sys.path.insert(0, base_dir)
 
 from utils import fetch
 from database import RedisClient
@@ -43,12 +41,10 @@ class Crawler:
             for proxy in func():
                 if proxy:
                     tasks.append(asyncio.ensure_future(redis_conn.add_proxy(proxy)))
-                    logger.info("Crawler {} √ {}".format(func.__name__,proxy))
+                    logger.info("Crawler {} √ {}".format(func.__name__, proxy))
 
         loop.run_until_complete(asyncio.wait(tasks))
         logger.info("Crawler resting...")
-
-
 
     @staticmethod
     @collect_funcs
@@ -79,7 +75,7 @@ class Crawler:
         快代理：https://www.kuaidaili.com
         """
         url = "https://www.kuaidaili.com/free/{}"
-        items = ["inha/{}/".format(_) for _ in range(1,21)]
+        items = ["inha/{}/".format(_) for _ in range(1, 21)]
         for proxy_type in items:
             html = fetch(url.format(proxy_type))
             if html:
@@ -109,7 +105,7 @@ class Crawler:
                     schema = proxy("td:nth-child(4)").text()
                     if ip and port and schema:
                         yield "{}://{}:{}".format(schema.lower(), ip, port)
-    #
+
     @staticmethod
     @collect_funcs
     def data5u():
@@ -128,7 +124,7 @@ class Crawler:
                     schema = item("span:nth-child(4)").text()
                     if ip and port and schema:
                         yield "{}://{}:{}".format(schema, ip, port)
-    #
+
     @staticmethod
     @collect_funcs
     def iphai():
@@ -179,13 +175,18 @@ class Crawler:
         """
         from copy import deepcopy
         headers = deepcopy(HEADERS)
-        headers.update({"Cookie":"__jsluid=b93d68c70282ececa5ac51068667d250; __jsl_clearance=1557549794.546|0|ZphsoSMFkHToyzuKEf5o9ht1b2M%3D"})
-        url = 'http://www.66ip.cn/nmtq.php?getnum=100&isp=0&anonymoustype=0&start=&ports=&export=&ipaddress=&area=1&proxytype={}&api=66ip'
+        headers.update(
+            {
+                "Cookie": "__jsluid=192ec1533a7f63c5640b1dd6cd8e9e3a; __jsl_clearance=1557579763.737|0|MTNSH9igfUpxx9dE5dv0AF0lQbo%3D",
+                "Host": "www.66ip.cn",
+                "Referer": "http://www.66ip.cn/nm.html"
+            })
+        url = 'http://www.66ip.cn/nmtq.php?getnum=&isp=0&anonymoustype=0&start=&ports=&export=&ipaddress=&area=0&proxytype={}&api=66ip'
         pattern = "\d+\.\d+.\d+\.\d+:\d+"
         items = [(0, "http://{}"), (1, "https://{}")]
         for item in items:
             proxy_type, host = item
-            html = fetch(url.format(proxy_type),headers=headers)
+            html = fetch(url.format(proxy_type), headers=headers)
             if html:
                 for proxy in re.findall(pattern, html):
                     yield host.format(proxy)
@@ -213,5 +214,6 @@ class Crawler:
                     port = proxy("td:nth-child(3)").text()
                     if ip and port:
                         yield host.format(ip, port)
+
 
 Crawler.run()

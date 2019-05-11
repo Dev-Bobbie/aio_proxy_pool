@@ -6,7 +6,6 @@ import logging.config as log_conf
 import datetime
 import coloredlogs
 
-
 log_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/logs'
 if not os.path.exists(log_dir):
     os.mkdir(log_dir)
@@ -48,7 +47,7 @@ log_config = {
         'aio_proxy_pool': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
-            'propagate': False # log是否向父级log传播
+            'propagate': False  # log是否向父级log传播
         }
     }
 }
