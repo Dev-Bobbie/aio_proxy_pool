@@ -43,7 +43,7 @@ class Crawler:
             for proxy in func():
                 if proxy:
                     tasks.append(asyncio.ensure_future(redis_conn.add_proxy(proxy)))
-                    logger.info("Crawler √ {}".format(proxy))
+                    logger.info("Crawler {} √ {}".format(func.__name__,proxy))
 
         loop.run_until_complete(asyncio.wait(tasks))
         logger.info("Crawler resting...")
@@ -52,7 +52,7 @@ class Crawler:
 
     @staticmethod
     @collect_funcs
-    def crawl_quanwangdaili():
+    def quanwangdaili():
         """
         全网代理：http://www.goubanjia.com/
         """
@@ -74,7 +74,7 @@ class Crawler:
 
     @staticmethod
     @collect_funcs
-    def crawl_kuaidaili():
+    def kuaidaili():
         """
         快代理：https://www.kuaidaili.com
         """
@@ -92,7 +92,7 @@ class Crawler:
 
     @staticmethod
     @collect_funcs
-    def crawl_ip3366():
+    def ip3366():
         """
         云代理：http://www.ip3366.net
         """
@@ -112,7 +112,7 @@ class Crawler:
     #
     @staticmethod
     @collect_funcs
-    def crawl_data5u():
+    def data5u():
         """
         无忧代理：http://www.data5u.com/
         """
@@ -131,7 +131,7 @@ class Crawler:
     #
     @staticmethod
     @collect_funcs
-    def crawl_iphai():
+    def iphai():
         """
         ip 海代理：http://www.iphai.com
         """
@@ -153,7 +153,7 @@ class Crawler:
 
     @staticmethod
     @collect_funcs
-    def crawl_ip89():
+    def ip89():
         """
         89免费代理：http://http://www.89ip.cn
         """
@@ -173,13 +173,13 @@ class Crawler:
 
     @staticmethod
     @collect_funcs
-    def crawl_66ip():
+    def ip_66():
         """
         66ip 代理：http://www.66ip.cn
         """
         from copy import deepcopy
         headers = deepcopy(HEADERS)
-        headers.update({"Cookie":"__jsluid=9cce68bd84072a17f872d5692d26f33e; Hm_lvt_1761fabf3c988e7f04bec51acd4073f4=1557407541,1557459343; Hm_lpvt_1761fabf3c988e7f04bec51acd4073f4=1557468320; __jsl_clearance=1557490953.412|0|ptNHwPxImIv32%2BC73qvxVptSO1c%3D"})
+        headers.update({"Cookie":"__jsluid=b93d68c70282ececa5ac51068667d250; __jsl_clearance=1557549794.546|0|ZphsoSMFkHToyzuKEf5o9ht1b2M%3D"})
         url = 'http://www.66ip.cn/nmtq.php?getnum=100&isp=0&anonymoustype=0&start=&ports=&export=&ipaddress=&area=1&proxytype={}&api=66ip'
         pattern = "\d+\.\d+.\d+\.\d+:\d+"
         items = [(0, "http://{}"), (1, "https://{}")]
@@ -192,7 +192,7 @@ class Crawler:
 
     @staticmethod
     @collect_funcs
-    def crawl_xici():
+    def xici():
         """
         西刺代理：http://www.xicidaili.com
         """
@@ -214,4 +214,4 @@ class Crawler:
                     if ip and port:
                         yield host.format(ip, port)
 
-# Crawler.run()
+Crawler.run()

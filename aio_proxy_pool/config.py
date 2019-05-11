@@ -4,12 +4,12 @@ import asyncio
 # 请求超时时间（秒）
 import os
 
-REQUEST_TIMEOUT = 15
+REQUEST_TIMEOUT = 5
 # 请求延迟时间（秒）
 REQUEST_DELAY =  0
 
 # redis 地址
-REDIS_HOST = "redis"
+REDIS_HOST = "192.168.33.11"
 # redis 端口
 REDIS_PORT = 6379
 # redis 密码
