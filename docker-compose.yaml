@@ -27,12 +27,6 @@ services:
     volumes:
       - ./data/redis:/data
 
-  chrome:
-    image: selenium/standalone-chrome:3.12.0-cobalt
-    ports:
-      - "4444:4444"
-    shm_size: 2g
-
 networks:
   localhost:
 
