@@ -14,7 +14,6 @@ services:
       - ./run.py:/code/run.py
     depends_on:
       - redis
-      - chrome
     entrypoint: python run.py
 
   redis:
