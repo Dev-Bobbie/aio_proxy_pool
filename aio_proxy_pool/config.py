@@ -11,7 +11,7 @@ REQUEST_DELAY = 0
 # redis 地址
 REDIS_HOST = "redis"
 # redis 端口
-REDIS_PORT = 6399
+REDIS_PORT = 6379
 # redis 密码
 REDIS_PASSWORD = None
 # redis set key
