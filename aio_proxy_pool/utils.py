@@ -53,7 +53,6 @@ def dec_connector(func):
 
     return wrapper
 
-
 import requests
 import execjs
 
@@ -62,7 +61,6 @@ def fetch_66_cookie():
     获取 cookies
     :return:
     """
-
     cookie_url = 'http://www.66ip.cn/'
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
@@ -73,7 +71,7 @@ def fetch_66_cookie():
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
     }
     while True:
-        response = requests.get(cookie_url,headers=headers)
+        response = requests.get(cookie_url, headers=headers)
         js_code1 = response.text
         js_code1 = js_code1.rstrip('\n')
         js_code1 = js_code1.replace('</script>', '')
@@ -91,8 +89,10 @@ def fetch_66_cookie():
     code = 'var a' + code.split('document.cookie')[1].split("Path=/;'")[0] + "Path=/;';return a;"
     code = 'window = {}; \n' + code
     js_final = "function getClearance(){" + code + "};"
+    js_final = js_final.replace("return return", "return eval")
     ctx = execjs.compile(js_final)
     jsl_clearance = ctx.call('getClearance')
+
     jsl_uid = response.headers["Set-Cookie"].split(";")[0]
     jsl_cle = jsl_clearance.split(';')[0].split('=')[1]
     cookie = f"{jsl_uid}; __jsl_clearance={jsl_cle}"
@@ -101,4 +101,3 @@ def fetch_66_cookie():
 
 async def get_cookie():
     return await loop.run_in_executor(None,fetch_66_cookie)
-
